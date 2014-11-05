@@ -36,5 +36,4 @@ function initButton() {
 }
 
 function openStatistics(){
-    //not yet implemented
 }
