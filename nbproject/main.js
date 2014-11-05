@@ -4,8 +4,13 @@
 })();
 
 function init() {
-    initButton();
+	if(!$('#btnStatistics').length)
+	{
+		initButton();
+	}
 }
+
+
 
 function initButton() {
     $("#sidebar").append('</br><input type="button" id="btnStatistics" value="STATISTICS" />');
