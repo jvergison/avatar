@@ -3,7 +3,9 @@
     "version": "0.0.1",
     "description": "Get statistics on your google calendar events.",
     "permissions": ["tabs", "https://*.google.com/"],
-    "browser_action": {
-            "default_icon": "icons/icon-16.gif"},
+    "browser_action":{
+        "default_icon": "icons/icon.png"
+    },
+
     "manifest_version": 2
 }
