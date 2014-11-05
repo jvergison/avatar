@@ -7,5 +7,9 @@
         "default_icon": "icons/icon.png"
     },
 
+    "background":{
+        "scrips" : ["background.js"]
+    },
+
     "manifest_version": 2
 }
