@@ -16,8 +16,9 @@ function CalendarManager() //constructor maakt het object cal en returnt het
 
     var NUMBER_OF_RESULTS = 10;
     //URL for getting feed of individual calendar support.
-    var CALENDAR_URL = 'https://www.google.com/calendar/feeds' +
-            '/default/private/embed?toolbar=true&max-results=' + NUMBER_OF_RESULTS;
+    //var CALENDAR_URL = 'https://www.google.com/calendar/feeds' +
+    //        '/default/private/embed?toolbar=true&max-results=' + NUMBER_OF_RESULTS;
+    var CALENDAR_URL = 'https://www.google.com/calendar/feeds/default/private/embed?futureevents=false'
 
     /**
      * Extracts event from the each entry of the calendar.
