@@ -1,0 +1,249 @@
+/**
+ * Provides all the calendar related utils.
+ */
+function CalendarManager() //constructor maakt het object cal en returnt het
+{
+    var cal = {};
+    cal.pollUnderProgress = false;
+    cal.eventList = new Array();
+
+    var NUMBER_OF_RESULTS = 10;
+    //URL for getting feed of individual calendar support.
+    //var CALENDAR_URL = 'https://www.google.com/calendar/feeds' +
+    //        '/default/private/embed?toolbar=true&max-results=' + NUMBER_OF_RESULTS;
+    var CALENDAR_URL = 'https://www.google.com/calendar/feeds/default/private/embed?futureevents=false'
+
+    /**
+     * Extracts event from the each entry of the calendar.
+     * @param {Object} elem The XML node to extract the event from.
+     * @param {Object} mailId email of the owner of calendar in multiple calendar
+     *     support.
+     * @return {Object} out An object containing the event properties.
+     */
+    cal.extractEvent = function(elem, mailId) {
+        var out = {};
+
+        for (var node = elem.firstChild; node != null; node = node.nextSibling) {
+            if (node.nodeName == 'title') {
+                out.title = node.firstChild ? node.firstChild.nodeValue : MSG_NO_TITLE;
+            } else if (node.nodeName == 'link' &&
+                    node.getAttribute('rel') == 'alternate') {
+                out.url = node.getAttribute('href');
+            } else if (node.nodeName == 'gd:where') {
+                out.location = node.getAttribute('valueString');
+            } else if (node.nodeName == 'gd:who') {
+                if (node.firstChild) {
+
+                    out.attendeeStatus = node.firstChild.getAttribute('value');
+                }
+            } else if (node.nodeName == 'gd:eventStatus') {
+                out.status = node.getAttribute('value');
+            } else if (node.nodeName == 'gd:when') {
+                var startTimeStr = node.getAttribute('startTime');
+                var endTimeStr = node.getAttribute('endTime');
+
+                startTime = rfc3339StringToDate(startTimeStr);
+                endTime = rfc3339StringToDate(endTimeStr);
+
+                if (startTime == null || endTime == null) {
+                    continue;
+                }
+
+                out.isAllDay = (startTimeStr.length <= 11);
+                out.startTime = startTime;
+                out.endTime = endTime;
+            }
+        }
+        return out;
+    };
+
+    /**
+     * Polls the server to get the feed of the user.
+     */
+    cal.pollServer = function() {
+        if (!cal.pollUnderProgress) {
+            cal.eventList = [];
+            cal.pollUnderProgress = true;
+
+            var url;
+            var xhr = new XMLHttpRequest();
+            try {
+                xhr.onreadystatechange = cal.genResponseChangeFunc(xhr);
+                xhr.onerror = function(error) {
+                    console.log('error: ' + error);
+                };
+
+                url = CALENDAR_URL;
+
+                xhr.open('GET', url);
+                xhr.send(null);
+            }
+            catch (e) {
+                console.log('ex: ' + e);
+
+            }
+        }
+
+
+    };
+
+    /**
+     * @param {xmlHttpRequest} xhr xmlHttpRequest object containing server response.
+     */
+    cal.genResponseChangeFunc = function(xhr) {
+        return function() {
+            if (xhr.readyState != 4) {
+                return;
+            }
+            if (!xhr.responseXML) {
+                console.log('No responseXML');
+
+                return;
+            }
+
+            cal.parseCalendarEntry(xhr.responseXML, 0);
+            cal.pollUnderProgress = false;
+
+            processEvents();
+
+            return;
+
+        };
+    };
+
+    /**
+     * Parses events from calendar response XML
+     * @param {string} responseXML Response XML for calendar.
+     * @param {integer} calendarId  Id of the calendar in array of calendars.
+     */
+    cal.parseCalendarEntry = function(responseXML, calendarId) {
+        var entry_ = responseXML.getElementsByTagName('entry');
+        var mailId = null;
+        var author = null;
+
+        if (responseXML.querySelector('author name')) {
+            author = responseXML.querySelector('author name').textContent;
+        }
+        if (responseXML.querySelector('author email')) {
+            mailId = responseXML.querySelector('author email').textContent;
+        }
+
+        if (entry_ && entry_.length > 0) {
+            for (var i = 0, entry; entry = entry_[i]; ++i) {
+
+                //haal de info van het event uit de xml en stop het in een object
+                var event_ = cal.extractEvent(entry, mailId);
+                this.eventList.push(event_);
+
+            }
+        }
+    };
+
+    //Get all events with same title/subject
+    cal.getEventsWithTitle = function(title) {
+        var events = new Array();
+
+        for (var i = 0; i < cal.eventList.length; i++) {
+
+            if(cal.eventList[i].title === title) {
+                events.push(cal.eventList[i]);
+            }
+        }
+
+        return events;
+    };
+    
+    /**
+     * A function that returns an object with the past, future and ongoing events
+     * @param {type} title
+     * @returns {undefined}
+     */
+    cal.getEventsByType = function(title) {
+        var subject = title || null;
+        var pastEvents = new Array();
+        var futureEvents = new Array();
+        var ongoingEvents = new Array();
+        var currentDate = new Date();
+        
+        var eventList = (subject == null ? cal.eventList : cal.getEventsWithTitle(subject));
+        
+        for(var i = 0; i < eventList.length; i++) {
+            if(eventList[i].endTime <= currentDate) {
+                pastEvents.push(eventList[i]);
+            }
+            else if(eventList[i].startTime > currentDate && eventList[i].endTime > currentDate) {
+                futureEvents.push(eventList[i]);
+            }
+            else if (eventList[i].startTime <= currentDate && eventList[i].endTime >= currentDate) {
+                ongoingEvents.push(eventList[i]);
+            }
+        }
+        
+        return {
+            "past"      : pastEvents,
+            "ongoing"   : ongoingEvents,
+            "future"    : futureEvents
+        }
+    };
+
+    cal.getTotalHoursOfEvents = function(title) {
+        var events = cal.getEventsWithTitle(title);
+        var hours = 0;
+        
+        for(var i = 0; i < events.length; i++) {
+            hours += calculateEventDuration(events.startTime, events.endTime);
+        }
+        
+        return hours;
+    };
+    
+    return cal;
+}
+;
+
+
+var DATE_TIME_REGEX =
+        /^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)\.\d+(\+|-)(\d\d):(\d\d)$/;
+var DATE_TIME_REGEX_Z = /^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)\.\d+Z$/;
+var DATE_REGEX = /^(\d\d\d\d)-(\d\d)-(\d\d)$/;
+
+/**
+ * Convert the incoming date into a javascript date.
+ * @param {String} rfc3339 The rfc date in string format as following
+ *     2006-04-28T09:00:00.000-07:00
+ *     2006-04-28T09:00:00.000Z
+ *     2006-04-19.
+ * @return {Date} The javascript date format of the incoming date.
+ */
+function rfc3339StringToDate(rfc3339) {
+    var parts = DATE_TIME_REGEX.exec(rfc3339);
+
+    // Try out the Z version
+    if (!parts) {
+        parts = DATE_TIME_REGEX_Z.exec(rfc3339);
+    }
+
+    if (parts && parts.length > 0) {
+        var d = new Date();
+        d.setUTCFullYear(parts[1], parseInt(parts[2], 10) - 1, parts[3]);
+        d.setUTCHours(parts[4]);
+        d.setUTCMinutes(parts[5]);
+        d.setUTCSeconds(parts[6]);
+
+        var tzOffsetFeedMin = 0;
+        if (parts.length > 7) {
+            tzOffsetFeedMin = parseInt(parts[8], 10) * 60 + parseInt(parts[9], 10);
+            if (parts[7] != '-') { // This is supposed to be backwards.
+                tzOffsetFeedMin = -tzOffsetFeedMin;
+            }
+        }
+        return new Date(d.getTime() + tzOffsetFeedMin * 60 * 1000);
+    }
+
+    parts = DATE_REGEX.exec(rfc3339);
+    if (parts && parts.length > 0) {
+        return new Date(parts[1], parseInt(parts[2], 10) - 1, parts[3]);
+    }
+    return null;
+};
+//END calendar manager	
