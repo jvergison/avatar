@@ -139,64 +139,95 @@ function CalendarManager() //constructor maakt het object cal en returnt het
         }
     };
 
-    //Get all events with same title/subject
-    cal.getEventsWithTitle = function(title) {
-        var events = new Array();
-
-        for (var i = 0; i < cal.eventList.length; i++) {
-
-            if(cal.eventList[i].title === title) {
-                events.push(cal.eventList[i]);
-            }
-        }
-
-        return events;
-    };
-    
     /**
-     * A function that returns an object with the past, future and ongoing events
+     * Returns an array of events with the same title
      * @param {type} title
-     * @returns {undefined}
+     * @returns {Array|@exp;cal@pro;eventList}
      */
-    cal.getEventsByType = function(title) {
-        var subject = title || null;
+    cal.getEventsWithTitle = function(title) {
+
+        if (typeof title === 'undefined') {
+            return cal.eventList;
+        } else {
+            var events = new Array();
+
+            for (var i = 0; i < cal.eventList.length; i++) {
+
+                if (cal.eventList[i].title === title) {
+                    events.push(cal.eventList[i]);
+                }
+            }
+
+            return events;
+        }
+    };
+
+    /**
+     * Returns an object that contains an array for past, ongoing and future events
+     * @param {array} The array of events
+     * @returns {object}
+     */
+    cal.getEventsByType = function(eventList) {
         var pastEvents = new Array();
         var futureEvents = new Array();
         var ongoingEvents = new Array();
         var currentDate = new Date();
-        
-        var eventList = (subject == null ? cal.eventList : cal.getEventsWithTitle(subject));
-        
-        for(var i = 0; i < eventList.length; i++) {
-            if(eventList[i].endTime <= currentDate) {
+
+        //var eventList = typeof title === 'undefined' ? cal.eventList : cal.getEventsWithTitle(title);
+
+        for (var i = 0; i < eventList.length; i++) {
+            if (eventList[i].endTime <= currentDate) {
+                //Event happened in the past
                 pastEvents.push(eventList[i]);
             }
-            else if(eventList[i].startTime > currentDate && eventList[i].endTime > currentDate) {
+            else if (eventList[i].startTime > currentDate && eventList[i].endTime > currentDate) {
+                //Event will happen in the future
                 futureEvents.push(eventList[i]);
             }
             else if (eventList[i].startTime <= currentDate && eventList[i].endTime >= currentDate) {
+                //Event is ongoing
                 ongoingEvents.push(eventList[i]);
             }
         }
-        
+
         return {
-            "past"      : pastEvents,
-            "ongoing"   : ongoingEvents,
-            "future"    : futureEvents
+            "past": pastEvents,
+            "ongoing": ongoingEvents,
+            "future": futureEvents
         }
     };
-
-    cal.getTotalHoursOfEvents = function(title) {
-        var events = cal.getEventsWithTitle(title);
+    
+    /**
+     * Get the total amount of hours for an array of events
+     * @param {type} title
+     * @returns {Number}
+     */
+    cal.getTotalHoursOfEvents = function(events) {
         var hours = 0;
-        
-        for(var i = 0; i < events.length; i++) {
-            hours += calculateEventDuration(events.startTime, events.endTime);
+
+        for (var i = 0; i < events.length; i++) {
+            //log
+            hours += calculateEventDuration(events[i].startTime, events[i].endTime);
         }
-        
+
         return hours;
     };
     
+    /**
+     * A function that calculates the ratio between completed events and events that have yet to be completed
+     * @param {type} The title of the events
+     * @returns {undefined}
+     */
+    cal.calculateCompleteRatio = function(title) {
+        var events = cal.getEventsWithTitle(title);
+        var typeObj = cal.getEventsByType(events);
+        
+        var totalHours = cal.getTotalHoursOfEvents(events);
+        var completedHours = cal.getTotalHoursOfEvents(typeObj.past);
+        
+        return parseFloat(completedHours / totalHours);
+    };
+
     return cal;
 }
 ;
@@ -245,5 +276,6 @@ function rfc3339StringToDate(rfc3339) {
         return new Date(parts[1], parseInt(parts[2], 10) - 1, parts[3]);
     }
     return null;
-};
+}
+;
 //END calendar manager	
