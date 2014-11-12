@@ -7,7 +7,6 @@ function CalendarManager() //constructor maakt het object cal en returnt het
     cal.pollUnderProgress = false;
     cal.eventList = new Array();
 
-    var NUMBER_OF_RESULTS = 10;
     //URL for getting feed of individual calendar support.
     //var CALENDAR_URL = 'https://www.google.com/calendar/feeds' +
     //        '/default/private/embed?toolbar=true&max-results=' + NUMBER_OF_RESULTS;
@@ -24,34 +23,42 @@ function CalendarManager() //constructor maakt het object cal en returnt het
         var out = {};
 
         for (var node = elem.firstChild; node != null; node = node.nextSibling) {
-            if (node.nodeName == 'title') {
-                out.title = node.firstChild ? node.firstChild.nodeValue : MSG_NO_TITLE;
-            } else if (node.nodeName == 'link' &&
-                    node.getAttribute('rel') == 'alternate') {
-                out.url = node.getAttribute('href');
-            } else if (node.nodeName == 'gd:where') {
-                out.location = node.getAttribute('valueString');
-            } else if (node.nodeName == 'gd:who') {
-                if (node.firstChild) {
+            switch(node.nodeName){
+                case 'title':
+                    out.title = node.firstChild ? node.firstChild.nodeValue : MSG_NO_TITLE;
+                    break;
+                    
+                case 'link': 
+                    if(node.getAttribute('rel') == 'alternate')
+                        out.url = node.getAttribute('href');
+                    break;
+                    
+                case'gd:where':
+                    out.location = node.getAttribute('valueString');
+                    break;
+                    
+                case 'gd:who':
+                    if (node.firstChild)
+                    out.attendeeStatus = node.firstChild.getAttribute('value');  
+                    break;
+                    
+                case 'gd:eventStatus':
+                    out.status = node.getAttribute('value');
+                    break;
+                    
+                case 'gd:when':
+                    var startTimeStr = node.getAttribute('startTime');
+                    var endTimeStr = node.getAttribute('endTime');
 
-                    out.attendeeStatus = node.firstChild.getAttribute('value');
-                }
-            } else if (node.nodeName == 'gd:eventStatus') {
-                out.status = node.getAttribute('value');
-            } else if (node.nodeName == 'gd:when') {
-                var startTimeStr = node.getAttribute('startTime');
-                var endTimeStr = node.getAttribute('endTime');
+                    startTime = rfc3339StringToDate(startTimeStr);
+                    endTime = rfc3339StringToDate(endTimeStr);
 
-                startTime = rfc3339StringToDate(startTimeStr);
-                endTime = rfc3339StringToDate(endTimeStr);
-
-                if (startTime == null || endTime == null) {
-                    continue;
-                }
-
-                out.isAllDay = (startTimeStr.length <= 11);
-                out.startTime = startTime;
-                out.endTime = endTime;
+                    if (startTime && endTime){
+                        out.isAllDay = (startTimeStr.length <= 11);
+                        out.startTime = startTime;
+                        out.endTime = endTime;
+                    }
+                break;
             }
         }
         return out;
@@ -69,22 +76,17 @@ function CalendarManager() //constructor maakt het object cal en returnt het
             var xhr = new XMLHttpRequest();
             try {
                 xhr.onreadystatechange = cal.genResponseChangeFunc(xhr);
-                xhr.onerror = function(error) {
-                    console.log('error: ' + error);
-                };
+                xhr.onerror = function(error) { console.log('error: ' + error); };
 
                 url = CALENDAR_URL;
 
                 xhr.open('GET', url);
                 xhr.send(null);
             }
-            catch (e) {
-                console.log('ex: ' + e);
-
+            catch(err) {
+                console.log('ex: ' + err);
             }
         }
-		
-
     };
 
     /**
@@ -92,12 +94,9 @@ function CalendarManager() //constructor maakt het object cal en returnt het
      */
     cal.genResponseChangeFunc = function(xhr) {
         return function() {
-            if (xhr.readyState != 4) {
-                return;
-            }
+            if (xhr.readyState != 4) return;
             if (!xhr.responseXML) {
                 console.log('No responseXML');
-
                 return;
             }
 
@@ -105,9 +104,7 @@ function CalendarManager() //constructor maakt het object cal en returnt het
             cal.pollUnderProgress = false;
 
             processEvents();
-
             return;
-
         };
     };
 
@@ -194,7 +191,7 @@ function CalendarManager() //constructor maakt het object cal en returnt het
             "past": pastEvents,
             "ongoing": ongoingEvents,
             "future": futureEvents
-        }
+        };
     };
     
     /**
