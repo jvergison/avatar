@@ -83,7 +83,7 @@ function CalendarManager() //constructor maakt het object cal en returnt het
 
             }
         }
-
+		
 
     };
 

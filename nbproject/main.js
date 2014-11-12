@@ -16,7 +16,7 @@ function init() {
 
         //Button wordt enkel gemaakt omdat polling async werkt.
         //Idee: Telkens als er een functie wordt opgeroepen voor statistieken: server pollen, maar functie moet wachten met uitvoeren tot server gepollt is
-        initButton('btnPollServer', 'POLL SERVER', pollServer);
+        //initButton('btnPollServer', 'POLL SERVER', pollServer);
         initDiv('divInfo');
     }
 }
@@ -69,28 +69,64 @@ function pollServer() {
 
 // statistics button click handler
 function openStatistics() {
-    //calendarManager.pollServer();
+    calendarManager.pollServer();
     //processEvents();
     
-    var totalHours = calendarManager.getTotalHoursOfEvents(calendarManager.getEventsWithTitle("sharepoint"));
-    var completed = calendarManager.calculateCompleteRatio("sharepoint") * 100;
-
-    var message = "Total Hours: " + totalHours + "<br/>% completed: " + completed + "% <br/>% to complete: " + (100 - completed);
-
-    showStatisticsInDiv('divInfo', "Statistics for SharePoint", message);
+    
 }
 
 //once the events are retrieved from the server, we do whatever we want with them
 function processEvents() {
     console.log("Processing events");
 
+	
+	var eventStatistics = {};
+	var currentDate = new Date();
+	
     for (var i = 0; i < calendarManager.eventList.length; ++i) {
-        console.log("Event " + (i + 1));
-        console.log(calendarManager.eventList[i].title);
-        console.log(calendarManager.eventList[i].startTime);
-        console.log(calendarManager.eventList[i].endTime);
-        console.log("-----------------");
-    }
+		var event = calendarManager.eventList[i];
+		var duration = calculateEventDuration(event.startTime, event.endTime);
+
+		var statistic = eventStatistics[event.title] || {
+			totalhours: 0,
+			completedhours: 0
+		};
+		
+		//total hours statistic
+		
+		statistic.totalhours += duration;
+		
+		//past hours statistic
+		if (event.endTime <= currentDate)
+			statistic.completedhours += duration;
+			
+			
+		eventStatistics[event.title] = statistic;
+	}
+		
+	generateDivFromStatistics(eventStatistics);
+	
+}
+
+function generateDivFromStatistics( statistics )
+{
+	//loop over statistics and show the div
+    var message = "";
+	for (var key in statistics) {
+		if (statistics.hasOwnProperty(key)) {
+			//add to message
+			var totalHours = statistics[key].totalhours;
+			
+			var completed = statistics[key].completedhours;
+			var togo = totalHours - completed;
+			message += "<i>" + key + "</i><br/>";
+			message += "Total Hours: " + totalHours + "<br/> Completed: "
+			+ completed + "<br/> To go: " + togo + "<br/>";
+		}
+	}
+	
+
+    showStatisticsInDiv('divInfo', "Statistics", message);
 }
 
 
