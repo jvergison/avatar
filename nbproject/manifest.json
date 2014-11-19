@@ -2,7 +2,9 @@
     "name": "AvatarHowest",
     "version": "0.0.1",
     "description": "Get statistics on your google calendar events.",
+
     "permissions": ["tabs", "https://www.google.com/", "identity", "https://accounts.google.com/*", "https://www.googleapis.com/*"],
+
     "browser_action":{
         "default_icon": "icons/icon.png"
     },
