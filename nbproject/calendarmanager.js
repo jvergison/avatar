@@ -1,68 +1,14 @@
 /**
  * Provides all the calendar related utils.
  */
-function CalendarManager() //constructor maakt het object cal en returnt het
+function CalendarManager(token) //constructor maakt het object cal en returnt het
 {
     var cal = {};
     cal.pollUnderProgress = false;
     cal.eventList = new Array();
 
-    //URL for getting feed of individual calendar support.
-    //var CALENDAR_URL = 'https://www.google.com/calendar/feeds' +
-    //        '/default/private/embed?toolbar=true&max-results=' + NUMBER_OF_RESULTS;
-    var CALENDAR_URL = 'https://www.google.com/calendar/feeds/default/private/embed?futureevents=false'
-
-    /**
-     * Extracts event from the each entry of the calendar.
-     * @param {Object} elem The XML node to extract the event from.
-     * @param {Object} mailId email of the owner of calendar in multiple calendar
-     *     support.
-     * @return {Object} out An object containing the event properties.
-     */
-    cal.extractEvent = function(elem, mailId) {
-        var out = {};
-
-        for (var node = elem.firstChild; node != null; node = node.nextSibling) {
-            switch(node.nodeName){
-                case 'title':
-                    out.title = node.firstChild ? node.firstChild.nodeValue : MSG_NO_TITLE;
-                    break;
-                    
-                case 'link': 
-                    if(node.getAttribute('rel') == 'alternate')
-                        out.url = node.getAttribute('href');
-                    break;
-                    
-                case'gd:where':
-                    out.location = node.getAttribute('valueString');
-                    break;
-                    
-                case 'gd:who':
-                    if (node.firstChild)
-                    out.attendeeStatus = node.firstChild.getAttribute('value');  
-                    break;
-                    
-                case 'gd:eventStatus':
-                    out.status = node.getAttribute('value');
-                    break;
-                    
-                case 'gd:when':
-                    var startTimeStr = node.getAttribute('startTime');
-                    var endTimeStr = node.getAttribute('endTime');
-
-                    startTime = rfc3339StringToDate(startTimeStr);
-                    endTime = rfc3339StringToDate(endTimeStr);
-
-                    if (startTime && endTime){
-                        out.isAllDay = (startTimeStr.length <= 11);
-                        out.startTime = startTime;
-                        out.endTime = endTime;
-                    }
-                break;
-            }
-        }
-        return out;
-    };
+    var mykey = token;
+    var CALENDAR_URL = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?access_token=' + mykey;
 
     /**
      * Polls the server to get the feed of the user.
@@ -71,71 +17,52 @@ function CalendarManager() //constructor maakt het object cal en returnt het
         if (!cal.pollUnderProgress) {
             cal.eventList = [];
             cal.pollUnderProgress = true;
-
-            var url;
-            var xhr = new XMLHttpRequest();
-            try {
-                xhr.onreadystatechange = cal.genResponseChangeFunc(xhr);
-                xhr.onerror = function(error) { console.log('error: ' + error); };
-
-                url = CALENDAR_URL;
-
-                xhr.open('GET', url);
-                xhr.send(null);
-            }
-            catch(err) {
-                console.log('ex: ' + err);
-            }
+            
+            $.ajax({
+                dataType: "json",
+                url: CALENDAR_URL,                
+                success: cal.genResponseChangeFunc
+            });
         }
     };
 
     /**
      * @param {xmlHttpRequest} xhr xmlHttpRequest object containing server response.
      */
-    cal.genResponseChangeFunc = function(xhr) {
-        return function() {
-            if (xhr.readyState != 4) return;
-            if (!xhr.responseXML) {
-                console.log('No responseXML');
-                return;
+    cal.genResponseChangeFunc = function(data) {
+        console.log(data);
+        cal.parseCalendarEntries(data);
+
+        cal.pollUnderProgress = false;
+
+        processEvents();
+        return;
+    };
+    
+    
+    cal.parseCalendarEntries = function(data)
+    {
+        var events = data.items;
+        for(var i = 0; i < events.length; ++i)
+        {
+            var entry = events[i];
+            var event = {};
+            event.title = entry.summary;
+            //console.log(event.start);
+            var startTime = rfc3339StringToDate(entry.start.dateTime);
+            var endTime = rfc3339StringToDate(entry.end.dateTime);
+
+            if (startTime && endTime){
+                event.isAllDay = (entry.start.dateTime.length <= 11);
+                event.startTime = startTime;
+                event.endTime = endTime;
             }
-
-            cal.parseCalendarEntry(xhr.responseXML, 0);
-            cal.pollUnderProgress = false;
-
-            processEvents();
-            return;
-        };
+            cal.eventList.push(event);
+        }
+        
     };
 
-    /**
-     * Parses events from calendar response XML
-     * @param {string} responseXML Response XML for calendar.
-     * @param {integer} calendarId  Id of the calendar in array of calendars.
-     */
-    cal.parseCalendarEntry = function(responseXML, calendarId) {
-        var entry_ = responseXML.getElementsByTagName('entry');
-        var mailId = null;
-        var author = null;
-
-        if (responseXML.querySelector('author name')) {
-            author = responseXML.querySelector('author name').textContent;
-        }
-        if (responseXML.querySelector('author email')) {
-            mailId = responseXML.querySelector('author email').textContent;
-        }
-
-        if (entry_ && entry_.length > 0) {
-            for (var i = 0, entry; entry = entry_[i]; ++i) {
-
-                //haal de info van het event uit de xml en stop het in een object
-                var event_ = cal.extractEvent(entry, mailId);
-                this.eventList.push(event_);
-
-            }
-        }
-    };
-
+    
     /**
      * Returns an array of events with the same title
      * @param {type} title

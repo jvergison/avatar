@@ -1,10 +1,9 @@
 (function() {
     var id = "pagknpjhappmknlejlnemfdjndgodcbn";
-
     //Initialize the global object calendarManager
-    calendarManager = CalendarManager();
-
+    calendarManager = CalendarManager(googleToken);
     init();
+    
 })();
 
 function init() {
@@ -105,6 +104,8 @@ function processEvents() {
 	}
 		
 	generateDivFromStatistics(eventStatistics);
+        
+        $("#gridContainer").hide();
 	
 }
 

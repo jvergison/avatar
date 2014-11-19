@@ -2,13 +2,20 @@
     "name": "AvatarHowest",
     "version": "0.0.1",
     "description": "Get statistics on your google calendar events.",
-    "permissions": ["tabs", "https://www.google.com/"],
+    "permissions": ["tabs", "https://www.google.com/", "identity", "https://accounts.google.com/*", "https://www.googleapis.com/*"],
     "browser_action":{
         "default_icon": "icons/icon.png"
     },
 
     "background":{
         "scripts" : ["background.js"]
+    },
+    
+    "oauth2": {
+        "client_id": "494419090178-bvkm2502qvc0jauneqi0prjuklr6n2a2.apps.googleusercontent.com",
+        "scopes": [
+            "https://www.googleapis.com/auth/calendar"
+        ]
     },
 
     "manifest_version": 2
