@@ -35,3 +35,14 @@ function calculateEventDuration(date1, date2) {
 //function convertToHours(days, hours, minutes, seconds) {
 //    return parseFloat((24 * days) + (hours) + (minutes / 60) + (seconds / 3600));
 //};
+
+
+// Set/update calendar events in google storage
+function saveCalendarItems(calendarevents){
+    chrome.storage.sync.set({"calendarevents" : calendarevents});
+}
+
+// Get stored calendar events from google storage
+function loadCalendarItems(){
+    return chrome.storage.sync.get("calendarevents");
+}
