@@ -1,5 +1,6 @@
 {
     "name": "AvatarHowest",
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgy/1Zrmyeam3kTSdrfdd2JA4ghkbxc7bLns4tTVT+Gjbl1QxUOCzLEQewRi703RZ/uy6TPpg3Z7NsbXBRlQJjFfPxWXFmbjs2uv+GRgZAyXwgV8REQCARZ+5QqcfdTYE+Sib01Bpz9Z55YFzCxWqdIjdwkU9IXkLblw6VWSTafkEeJOsEjch3clzpkADhAx37cQDlvS9nBivSJrxuLwCIluMZcYl7aiUMetg5hMrFxTr6ed+fKx/ce8rmzPDQ+PVqi3ml/hiCN/o4owIPMRqlkytpOL0Ha7qO3sCaiZLbbmscCpO5z42YKTd581/ggkxAhUgWcWDU0ZZebfzzpOcfwIDAQAB",
     "version": "0.0.1",
     "description": "Get statistics on your google calendar events.",
 
@@ -14,7 +15,7 @@
     },
     
     "oauth2": {
-        "client_id": "494419090178-bvkm2502qvc0jauneqi0prjuklr6n2a2.apps.googleusercontent.com",
+        "client_id": "494419090178-1g88g7ntujeo3j7inurivnjets19lpv0.apps.googleusercontent.com",
         "scopes": [
             "https://www.googleapis.com/auth/calendar"
         ]
