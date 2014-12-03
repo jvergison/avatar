@@ -49,8 +49,8 @@ function CalendarManager(token) //constructor maakt het object cal en returnt he
             var event = {};
             event.title = entry.summary;
             //console.log(event.start);
-            var startTime = rfc3339StringToDate(entry.start.dateTime);
-            var endTime = rfc3339StringToDate(entry.end.dateTime);
+            var startTime = parseGoogleDate(entry.start.dateTime);
+            var endTime = parseGoogleDate(entry.end.dateTime);
 
             if (startTime && endTime){
                 event.isAllDay = (entry.start.dateTime.length <= 11);
@@ -200,6 +200,11 @@ function rfc3339StringToDate(rfc3339) {
         return new Date(parts[1], parseInt(parts[2], 10) - 1, parts[3]);
     }
     return null;
+};
+
+//DATES
+function parseGoogleDate(d) {   
+   return new Date(Date.parse(d));
 }
-;
+
 //END calendar manager	
