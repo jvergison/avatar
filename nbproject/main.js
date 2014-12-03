@@ -8,10 +8,12 @@
 
 function init() {
     calendarManager.pollServer();
-
-    $("#gridcontainer").after(
-        "<div id='divStatistics'></div>"
-    );
+    if($("#divStatistics").length === 0)
+    {
+        $("#gridcontainer").after(
+            "<div id='divStatistics'></div>"
+        );
+    }
     $("#divStatistics").hide();
 
     if (!$('#btnStatistics').length)
