@@ -8,19 +8,21 @@
 
 function init() {
     calendarManager.pollServer();
+    
+    //INIT OVERALL DIV FOR THE STATISTICS  
     if ($("#divStatistics").length === 0)
     {
-        $("#gridcontainer").after(createStatisticsDiv());
-
-
+        $("#gridcontainer").after(initStatisticsDiv());
     }
+
     $("#divStatistics").hide();
 
+    //INIT THE EXTRA RED BUTTON ON THE SIDEBAR
     if (!$('#btnStatistics').length)
     {
         initButton('btnStatistics', 'Show statistics', function() {
             if ($("#gridcontainer").is(":visible")) {
-                openStatistics();
+                pollServer();
                 $("#btnStatistics").prop('value', 'Back to calendar');
                 $("#divStatistics").show();
                 $("#gridcontainer").hide();
@@ -32,18 +34,11 @@ function init() {
                 $("#gridcontainer").show();
             }
         });
-
-        //Button wordt enkel gemaakt omdat polling async werkt.
-        //Idee: Telkens als er een functie wordt opgeroepen voor statistieken: server pollen, maar functie moet wachten met uitvoeren tot server gepollt is
-        //initButton('btnPollServer', 'POLL SERVER', pollServer);
-        initDiv('divInfo');
     }
-    
-    
+
+    //Bind GUI events
     bindEventHandlers();
 }
-
-
 
 function initButton(id, value, clickHandler) {
     $("#sidebar").append('</br><input type="button" id="' + id + '" value="' + value + '" />');
@@ -74,10 +69,6 @@ function initButton(id, value, clickHandler) {
 
 }
 
-function initDiv(id) {
-    $("#sidebar").append('<div id="' + id + '"></div>');
-}
-
 function showStatisticsInDiv(title, message) {
     $("#divEventStats").html(
             "<p><strong>" + title + "</strong>:<br/>" +
@@ -85,52 +76,22 @@ function showStatisticsInDiv(title, message) {
             + "</p>");
 }
 
+
 function pollServer() {
     calendarManager.pollServer();
 }
 
-// statistics button click handler
-function openStatistics() {
-    calendarManager.pollServer();
-    //processEvents();
-
-
-}
-
-//once the events are retrieved from the server, we do whatever we want with them
-function processEvents() {
+/**
+ * The general callback function to be executed once all events are returned from the server.
+ * @returns {undefined}
+ */
+function onEventLoadComplete() {
     console.log("Processing events");
-    addOptionsToSelect(getUniqueEventNames(calendarManager.eventList));
-    
-    /*
-    var eventStatistics = {};
-    var currentDate = new Date();
-    
-    for (var i = 0; i < calendarManager.eventList.length; ++i) {
-        var event = calendarManager.eventList[i];
-        //console.log(event);
 
-        var duration = calculateEventDuration(event.startTime, event.endTime);
-
-        var statistic = eventStatistics[event.title] || {
-            totalhours: 0,
-            completedhours: 0
-        };
-
-        //total hours statistic
-
-        statistic.totalhours += duration;
-
-        //past hours statistic
-        if (event.endTime <= currentDate)
-            statistic.completedhours += duration;
-
-
-        eventStatistics[event.title] = statistic;
-    }
-
-    generateDivFromStatistics(eventStatistics);
-    */
+    $("#selEvents").html(
+            getUniqueNameSelectOptions(
+                getUniqueEventNames(calendarManager.eventList)
+    ));
 
     $("#gridContainer").hide();
 
@@ -157,22 +118,26 @@ function generateDivFromStatistics(statistics)
     showStatisticsInDiv("Statistics", message);
 }
 
-function createStatisticsDiv() {
+function initStatisticsDiv() {
     var html = "<div id='divStatistics'>" +
-            "<div><select id='selEvents'></select></div>" +
+            "<div id='divInputFields'>" +
+            "<select id='selEvents'></select> <br/>" +
+            "<input type='text' id='txtDate'/> <br/>" +
+            "<input type='number' id='txtHours'/> <br/>" +
+            "<button id='btnCalculateStatistics'>Generate Statistics</button>" +
+            "</div>" +
             "<div id='divEventStats'></div>" +
             "</div>";
 
     return html;
 }
 
-function processEventsWithTitle(events) {
+function calculateStatistics(events, dateToFinish, totalHours) {
     var eventStatistics = {};
     var currentDate = new Date();
-    
+
     for (var i = 0; i < events.length; ++i) {
         var event = events[i];
-        //console.log(event);
 
         var duration = calculateEventDuration(event.startTime, event.endTime);
 
@@ -189,48 +154,76 @@ function processEventsWithTitle(events) {
         if (event.endTime <= currentDate)
             statistic.completedhours += duration;
 
-
         eventStatistics[event.title] = statistic;
     }
 
     generateDivFromStatistics(eventStatistics);
 }
 
+/**
+ * Returns an array containing unique titles for all the events.
+ * 
+ * @param {type} eventList
+ * @returns {Array}
+ */
+function getUniqueEventNames(eventList) {
+    console.log("getUniqueEventNames");
+
+    var uniqueNames = [];
+
+    $.each(eventList, function(i, el) {
+        console.log(el);
+
+        if ($.inArray(el.title, uniqueNames) === -1) {
+            uniqueNames.push(el.title);
+        }
+    });
+
+    return uniqueNames;
+}
+
+/**
+ * Binds all the events to the controls in the statisticsDiv
+ * 
+ * @returns {undefined}
+ */
 function bindEventHandlers() {
+    //Initialize datapicker
+    $("#txtDate").datepicker();
+
     $("#selEvents").on('change', function() {
-        //Show statistics for the selected event
-        
-        console.log("CHANGED");
-        
-        var events = calendarManager.getEventsWithTitle($(this).val());
-        
-        console.log(events);
-        
-        processEventsWithTitle(events);
+        updateStatistics();
+    });
+
+    $("#btnCalculateStatistics").on('click', function() {
+        updateStatistics();
     });
 }
 
-function getUniqueEventNames(eventList) {
-    var uniqueNames = [];
+/**
+ * 
+ * @returns {undefined}
+ */
+function updateStatistics() {
+    var events = calendarManager.getEventsWithTitle($("#selEvents").val());
     
-    $.each(eventList, function(i, el){
-        console.log(el);
-        
-        if($.inArray(el.title, uniqueNames) === -1) uniqueNames.push(el.title);
-    });
+    var dateToFinish = $("#txtDate").val();
+    var totalHours = $("#txtHours").val();
     
-    return uniqueNames;
-};
+    console.log(events);
 
-function addOptionsToSelect(names) {
-    //Empty the select
-    $("#selEvents").empty();
 
+    calculateStatistics(events, dateToFinish, totalHours);
+}
+
+function getUniqueNameSelectOptions(arrayNames) {
     var html = "";
 
-    for (var i = 0; i < names.length; i++) {
-        html += "<option value='" + names[i] + "'>" + names[i] + "</option>";
+    for (var i = 0; i < arrayNames.length; i++) {
+        html += "<option value='" + arrayNames[i] + "'>" + arrayNames[i] + "</option>";
     }
 
-    $("#selEvents").html(html);
+    return html;
 }
+
+//FUNCTIONS FOR CALCULATING STATISTIC VALUES

@@ -10,6 +10,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
         chrome.tabs.executeScript(null, { file: "scripts/jquery-1.11.1.min.js" }, function() {
             chrome.tabs.executeScript(null, { file: "helpfunctions.js" });
             chrome.tabs.executeScript(null, { file: "calendarmanager.js" });
+            chrome.tabs.executeScript(null, { file: "lib/jquery-ui.min.js" });
 
 
             chrome.identity.getAuthToken({ 'interactive': true }, function(token) {

@@ -35,7 +35,8 @@ function CalendarManager(token) //constructor maakt het object cal en returnt he
 
         cal.pollUnderProgress = false;
 
-        processEvents();
+        //When all the events are polled from the server, execute the callback in main.js
+        onEventLoadComplete();
         return;
     };
     
@@ -47,7 +48,8 @@ function CalendarManager(token) //constructor maakt het object cal en returnt he
         {
             var entry = events[i];
             var event = {};
-            event.title = entry.summary;
+            event.title = entry.summary.toUpperCase();
+            
             //console.log(event.start);
             var startTime = parseGoogleDate(entry.start.dateTime);
             var endTime = parseGoogleDate(entry.end.dateTime);
@@ -77,7 +79,7 @@ function CalendarManager(token) //constructor maakt het object cal en returnt he
 
             for (var i = 0; i < cal.eventList.length; i++) {
 
-                if (cal.eventList[i].title === title) {
+                if (cal.eventList[i].title === title.toUpperCase()) {
                     events.push(cal.eventList[i]);
                 }
             }
