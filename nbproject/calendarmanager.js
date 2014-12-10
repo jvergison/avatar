@@ -132,7 +132,6 @@ function CalendarManager(token) //constructor maakt het object cal en returnt he
         var hours = 0;
 
         for (var i = 0; i < events.length; i++) {
-            //log
             hours += calculateEventDuration(events[i].startTime, events[i].endTime);
         }
 
@@ -140,23 +139,38 @@ function CalendarManager(token) //constructor maakt het object cal en returnt he
     };
     
     /**
+     * Get the amount of hours you've already completed
+     * @param {type} events
+     * @returns {Number}
+     */
+    cal.getCompletedHours = function(events) {
+        var hours = 0;
+        var currentDate = new Date();
+        
+        for (var i = 0; i < events.length; i++) {
+            if(events[i].endTime <= currentDate) {
+                hours += calculateEventDuration(events[i].startTime, events[i].endTime);
+            }
+        }
+        
+        return hours;
+    }
+    
+    /**
      * A function that calculates the ratio between completed events and events that have yet to be completed
      * @param {type} The title of the events
      * @returns {undefined}
      */
-    cal.calculateCompleteRatio = function(title) {
-        var events = cal.getEventsWithTitle(title);
-        var typeObj = cal.getEventsByType(events);
+    cal.calculateCompleteRatio = function(events) {
         
         var totalHours = cal.getTotalHoursOfEvents(events);
-        var completedHours = cal.getTotalHoursOfEvents(typeObj.past);
+        var completedHours = cal.getHoursCompleted(events);
         
         return parseFloat(completedHours / totalHours);
     };
 
     return cal;
-}
-;
+};
 
 
 var DATE_TIME_REGEX =
@@ -209,4 +223,4 @@ function parseGoogleDate(d) {
    return new Date(Date.parse(d));
 }
 
-//END calendar manager	
+//END calendar managers

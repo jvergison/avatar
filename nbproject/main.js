@@ -132,10 +132,14 @@ function initStatisticsDiv() {
     return html;
 }
 
-function calculateStatistics(events, dateToFinish, totalHours) {
-    var eventStatistics = {};
-    var currentDate = new Date();
-
+function calculateStatistics(events, userDate, userHours) {
+    var completedHours = calendarManager.getTotalHoursOfEvents(events);
+    var totalHours = calendarManager.getCompletedHours(events);
+    var completeRatio = calendarManager.calculateCompleteRatio(events);
+    
+    
+    
+    /*
     for (var i = 0; i < events.length; ++i) {
         var event = events[i];
 
@@ -156,7 +160,8 @@ function calculateStatistics(events, dateToFinish, totalHours) {
 
         eventStatistics[event.title] = statistic;
     }
-
+    */
+   
     generateDivFromStatistics(eventStatistics);
 }
 
@@ -207,7 +212,7 @@ function bindEventHandlers() {
 function updateStatistics() {
     var events = calendarManager.getEventsWithTitle($("#selEvents").val());
     
-    var dateToFinish = $("#txtDate").val();
+    var dateToFinish = new Date($("#txtDate").val());
     var totalHours = $("#txtHours").val();
     
     console.log(events);
@@ -225,5 +230,3 @@ function getUniqueNameSelectOptions(arrayNames) {
 
     return html;
 }
-
-//FUNCTIONS FOR CALCULATING STATISTIC VALUES
