@@ -7,10 +7,15 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     var match2 = 'https://www.google.com/calendar/b/1/render';
     if (tab.url.substring(0, match.length) === match || tab.url.substring(0, match.length) === match2)
     {
-        chrome.tabs.executeScript(null, { file: "scripts/jquery-1.11.1.min.js" }, function() {
-            chrome.tabs.executeScript(null, { file: "helpfunctions.js" });
-            chrome.tabs.executeScript(null, { file: "calendarmanager.js" });
-            chrome.tabs.executeScript(null, { file: "lib/jquery-ui.min.js" });
+        chrome.tabs.executeScript(null, { file: "lib/jquery/jquery.js" }, function() {
+            //Execute all the js-scripts
+            chrome.tabs.executeScript(null, { file: "js/calendarManager.js" });
+            chrome.tabs.executeScript(null, { file: "js/guiCalendar.js" });
+            chrome.tabs.executeScript(null, { file: "js/helpFunctions.js" });
+            chrome.tabs.executeScript(null, { file: "js/storage.js" });
+            
+            //Execute libraries
+            chrome.tabs.executeScript(null, { file: "lib/jquery-ui/jquery-ui.min.js" });
 
 
             chrome.identity.getAuthToken({ 'interactive': true }, function(token) {
