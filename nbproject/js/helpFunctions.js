@@ -33,93 +33,72 @@ calendarApp.statistics = calendarApp.statistics || {};
 calendarApp.statistics.calculateStatistics = function(events, deadlinedate, deadlinehours) {
     var totalHours  = calendarApp.events.getTotalHoursOfEvents(events);
     var completedHours = calendarApp.events.getCompletedHours(events);
+    var eventStart = calendarApp.date.getFirstEventDate(events);
     
-    var completeRatio   = calendarApp.statistics.calculateCompleteRatio(events);
-    var averageHoursTillDeadline = calendarApp.statistics.calculateAverageAmountOfHoursToDo(completedHours, totalHours, deadlinedate);
-    var finishedInTime = calendarApp.statistics.calculateIfFinishedInTime(completedHours,
-            calendarApp.date.getFirstEventDate(events),
-            deadlinedate
-            );
+    var hoursLeftTillDeadline = "A deadline is required for this statistic";
+    var hoursToDoEachDay = "A deadline and total amount of hours are required for this statistic";
+    var percentageComplete = "A total amount of hours is required for this statistic";
+    if(deadlinedate != "Invalid Date")
+    {
+        hoursLeftTillDeadline = calendarApp.statistics.calculateHoursLeftAfterCompletion(completedHours, eventStart, deadlinedate);
+    }
+    
+    if(deadlinehours != "")
+    {
+        percentageComplete = calendarApp.statistics.calculatePercentageComplete(completedHours, deadlinehours);
+    }
+    
+    if(deadlinedate != "Invalid Date" && deadlinehours != "")
+    {
+        hoursToDoEachDay = calendarApp.statistics.calculateHoursToDoEachDay(completedHours, deadlinehours, deadlinedate);
+    }
 
-    /*
-     for (var i = 0; i < events.length; ++i) {
-     var event = events[i];
-     
-     var duration = calculateEventDuration(event.startTime, event.endTime);
-     
-     var statistic = eventStatistics[event.title] || {
-     totalhours: 0,
-     completedhours: 0
-     };
-     
-     //total hours statistic
-     
-     statistic.totalhours += duration;
-     
-     //past hours statistic
-     if (event.endTime <= currentDate)
-     statistic.completedhours += duration;
-     
-     eventStatistics[event.title] = statistic;
-     }
-     */
-
-    //generateDivFromStatistics(eventStatistics);
+        
 
     return {
-        completedHours: completedHours,
-        totalHours: totalHours,
-        completeRatio: completeRatio,
-        averageHoursTillDeadline: averageHoursTillDeadline,
-        finishedIntTime: finishedInTime
+        "Completed Hours": completedHours,
+        "Total Hours": totalHours,
+        "Hours to do Each Day": hoursToDoEachDay,
+        "Percentage completed": percentageComplete,
+        "Hours spare after completion": hoursLeftTillDeadline,
+    };
+};
+
+calendarApp.statistics.calculateHoursToDoEachDay = function(hoursCompleted, totalHours, dateDeadline)
+{
+    var today = new Date();
+    var daysTillDeadline = calendarApp.date.calculateEventDuration(today, dateDeadline)/24;
+    
+    if(daysTillDeadline < 1) //deadline is tomorrow, so work to do today
+    {
+        daysTillDeadline = 1;
     }
+    
+    var hours = totalHours - hoursCompleted;
+    return +(hours/(daysTillDeadline)).toFixed(2);
 };
 
-calendarApp.statistics.calculateIfFinishedInTime = function(completedHours, earliestDate, deadlineDate) {
-    var studiedInTime = false;
+calendarApp.statistics.calculatePercentageComplete = function(hoursCompleted, totalHours)
+{
+    return +(hoursCompleted/totalHours*100).toFixed(2);
+};
 
-    var currentDate = new Date();
-
-    var tempo = parseFloat(completedHours / calendarApp.date.calculateEventDuration(earliestDate, currentDate));
-
-    var hoursTillDeadLine = calendarApp.date.calculateEventDuration(currentDate, deadlineDate);
-
-    var hoursTillDeadLineTempoRatio = parseFloat(hoursTillDeadLine / tempo);
-
-    currentDate.setHours(currentDate.getHours() + hoursTillDeadLineTempoRatio);
-
-    if (currentDate <= deadlineDate) {
-        studiedInTime = true;
+calendarApp.statistics.calculateHoursLeftAfterCompletion = function(hoursCompleted, eventStart, dateDeadline)
+{
+    
+    var today = new Date();
+    var firstAndTodayDiff = calendarApp.date.calculateEventDuration(eventStart, today);
+    if(hoursCompleted != 0)
+    {
+        var tempo = hoursCompleted/firstAndTodayDiff;
+        var hoursToGo = calendarApp.date.calculateEventDuration(today,dateDeadline);
+        return +(hoursToGo*tempo).toFixed(2);
     }
-
-    //If negative > not in time
-    //Else: in time
-    return (deadlineDate - currentDate) / 3600000;
-};
-
-calendarApp.statistics.calculateAverageAmountOfHoursToDo = function(hoursCompleted, totalHours, dateDeadline) {
-    var currentDate = new Date();
-
-    //Hours between today and deadline
-    var hours = calendarApp.date.calculateEventDuration(currentDate, dateDeadline);
-
-    var averageHoursPerHour = Math.abs(totalHours - hoursCompleted) / (hours);
-
-    //Return the average hours per days;
-    return averageHoursPerHour;
-};
-
-/**
- * A function that calculates the ratio between completed events and events that have yet to be completed
- * @param {type} The title of the events
- * @returns {undefined}
- */
-calendarApp.statistics.calculateCompleteRatio = function(events) {
-
-    var totalHours = calendarApp.events.getTotalHoursOfEvents(events);
-    var completedHours = calendarApp.events.getCompletedHours(events);
-
-    return parseFloat(completedHours / totalHours);
+    else
+    {
+        return "Assessed time left is based on current tempo. \nThis is impossible to calculate if there isn't at least 1 completed hour.";
+    }
+    
 };
 
 ///////////////////

@@ -39,7 +39,28 @@ calendarApp.gui.init = function() {
 
 calendarApp.gui.bindEvents = function() {
     //Initialize datapicker
-    $("#txtDate").datepicker();
+    $("#txtDate").datepicker({
+    minDate: 1,
+    onSelect: function(theDate) {
+        $("#dataEnd").datepicker('option', 'minDate', new Date(theDate));
+    },
+    beforeShow: function() {
+        $('#ui-datepicker-div').css('z-index', 9999);
+        $('#ui-datepicker-div').css('background','#ededed');
+        $('#ui-datepicker-div').css('border','1px solid black');
+        
+        console.log(this);
+        
+
+    }
+    });
+    
+    
+    //$('.ui-datepicker-prev').css('color','blue');
+    //$('.ui-datepicker-next').css('text-decoration','underline');
+    //$('.ui-datepicker-next').css('cursor','pointer');
+    //$('.ui-datepicker-next').css('float','right');
+    
 
     $("#selEvents").on('change', function() {
         calendarApp.gui.updateStatistics();
@@ -99,7 +120,7 @@ calendarApp.gui.showStatistics = function(title, message) {
 };
 
 calendarApp.gui.updateStatistics = function() {
-    if ($("#txtDate").val() !== "" && $("#txtHours").val() !== "") {
+    //if ($("#txtDate").val() !== "" && $("#txtHours").val() !== "") {
         var events = calendarApp.events.getEventsWithTitle(calendarManager.eventList, $("#selEvents").val());
 
         var dateToFinish = new Date($("#txtDate").val());
@@ -112,7 +133,14 @@ calendarApp.gui.updateStatistics = function() {
         
         console.log("STATISTICS");
         console.log(obj);
-    }
+        $("#divEventStats").empty();
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                 $("#divEventStats").append("<p>" + key + ": " + obj[key] +"</p>");
+            }
+        }
+        
+    //}
 };
 
 //CODE UNDERNEATH = INITIATION OF THE GUI ELEMENTS
