@@ -12,7 +12,6 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
             chrome.tabs.executeScript(null, { file: "js/calendarManager.js" });
             chrome.tabs.executeScript(null, { file: "js/guiCalendar.js" });
             chrome.tabs.executeScript(null, { file: "js/helpFunctions.js" });
-            chrome.tabs.executeScript(null, { file: "js/storage.js" });
             
             //Execute libraries
             chrome.tabs.executeScript(null, { file: "lib/jquery-ui/jquery-ui.min.js" });

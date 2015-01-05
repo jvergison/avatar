@@ -3,7 +3,7 @@ calendarApp.gui = calendarApp.gui || {};
 
 calendarApp.gui.init = function() {
     calendarManager.pollServer();
-
+    
     //INIT OVERALL DIV FOR THE STATISTICS  
     if ($("#divStatistics").length === 0)
     {
@@ -54,12 +54,6 @@ calendarApp.gui.bindEvents = function() {
 
     }
     });
-    
-    
-    //$('.ui-datepicker-prev').css('color','blue');
-    //$('.ui-datepicker-next').css('text-decoration','underline');
-    //$('.ui-datepicker-next').css('cursor','pointer');
-    //$('.ui-datepicker-next').css('float','right');
     
 
     $("#selEvents").on('change', function() {
@@ -139,8 +133,6 @@ calendarApp.gui.updateStatistics = function() {
                  $("#divEventStats").append("<p>" + key + ": " + obj[key] +"</p>");
             }
         }
-        
-    //}
 };
 
 //CODE UNDERNEATH = INITIATION OF THE GUI ELEMENTS

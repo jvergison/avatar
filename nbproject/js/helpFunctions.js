@@ -60,7 +60,8 @@ calendarApp.statistics.calculateStatistics = function(events, deadlinedate, dead
         "Total Hours": totalHours,
         "Hours to do Each Day": hoursToDoEachDay,
         "Percentage completed": percentageComplete,
-        "Hours spare after completion": hoursLeftTillDeadline,
+        //"Hours spare after completion": hoursLeftTillDeadline,
+        "Estimated end date": hoursLeftTillDeadline
     };
 };
 
@@ -88,11 +89,27 @@ calendarApp.statistics.calculateHoursLeftAfterCompletion = function(hoursComplet
     
     var today = new Date();
     var firstAndTodayDiff = calendarApp.date.calculateEventDuration(eventStart, today);
+    
     if(hoursCompleted != 0)
     {
         var tempo = hoursCompleted/firstAndTodayDiff;
         var hoursToGo = calendarApp.date.calculateEventDuration(today,dateDeadline);
-        return +(hoursToGo*tempo).toFixed(2);
+        
+        var estimatedDate = new Date();
+        var s = "";
+        
+        estimatedDate.setHours(estimatedDate.getHours() +  (+(hoursToGo*tempo).toFixed(2)));
+        
+        var daysLeft = calendarApp.date.calculateEventDuration(estimatedDate, dateDeadline)/24;
+        
+        
+        if(estimatedDate < dateDeadline) {
+            s = "You will finish your project " + daysLeft +" days before the deadline, at the current rate.";
+        } else {
+            s = "At the current rate, your project will not be done on time! It will take approximately " + daysLeft + " days extra!";
+        }
+        
+        return estimatedDate.toDateString() + ", " + estimatedDate.toLocaleTimeString() + ". " + s;
     }
     else
     {
