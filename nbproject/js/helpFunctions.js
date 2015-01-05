@@ -100,7 +100,7 @@ calendarApp.statistics.calculateHoursLeftAfterCompletion = function(hoursComplet
         
         estimatedDate.setHours(estimatedDate.getHours() +  (+(hoursToGo*tempo).toFixed(2)));
         
-        var daysLeft = calendarApp.date.calculateEventDuration(estimatedDate, dateDeadline)/24;
+        var daysLeft = (calendarApp.date.calculateEventDuration(estimatedDate, dateDeadline) / 24).toFixed(1);
         
         
         if(estimatedDate < dateDeadline) {

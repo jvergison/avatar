@@ -16,7 +16,7 @@ calendarApp.calendarManager = function(token, onLoadCalendarEventsCallBack) {
      */
     self.pollServer = function() {
         if (!pollUnderProgress) {
-            eventList = [];
+            self.eventList = [];
             pollUnderProgress = true;
 
             $.ajax({
